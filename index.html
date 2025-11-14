@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keepers of X - A Digital Legacy</title>
+    <meta name="description" content="The archive of when everyone joined X/Twitter. Discover the pioneers, early adopters, and legends of the digital age.">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="parchment">
+            <div class="ornate-corner corner-tl"></div>
+            <div class="ornate-corner corner-tr"></div>
+            <div class="ornate-corner corner-bl"></div>
+            <div class="ornate-corner corner-br"></div>
+
+            <header>
+                <div class="logo-header">
+                    <img src="/favicon.svg" alt="Keepers of X" width="60" height="60">
+                    <div>
+                        <h1>Keepers of X</h1>
+                        <div class="subtitle">A Digital Legacy</div>
+                    </div>
+                </div>
+                <p class="tagline">Index of Inscribers: By Date of Entry</p>
+            </header>
+
+            <div class="submit-section">
+                <label class="submit-label">Inscribe a New Entry</label>
+                <form id="submit-form" class="submit-form">
+                    <input 
+                        type="text" 
+                        id="handle-input"
+                        class="submit-input" 
+                        placeholder="Enter X/Twitter handle (e.g., @jack)"
+                        required
+                    >
+                    <button type="submit" class="submit-btn" id="submit-btn">
+                        <span id="btn-text">Inscribe</span>
+                        <span id="btn-loading" style="display: none;">⏳ Inscribing...</span>
+                    </button>
+                </form>
+                <p class="submit-hint">Submit any handle to add them to the chronicles and reveal their date of entry</p>
+                <div id="submit-message" class="submit-message"></div>
+            </div>
+
+            <div class="stats-bar" id="stats-bar">
+                <div class="stat">
+                    <div class="stat-number" id="total-profiles">-</div>
+                    <div class="stat-label">Inscribed Souls</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number" id="earliest-year">-</div>
+                    <div class="stat-label">Year of Genesis</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number" id="total-countries">-</div>
+                    <div class="stat-label">Lands Represented</div>
+                </div>
+            </div>
+
+            <div class="filters-section">
+                <span class="filters-label">Sort by:</span>
+                <div class="filters">
+                    <button class="filter-btn active" data-sort="oldest">Oldest First</button>
+                    <button class="filter-btn" data-sort="newest">Newest First</button>
+                    <button class="filter-btn" data-sort="followers">Most Followers</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="parchment">
+            <div class="ornate-corner corner-tl"></div>
+            <div class="ornate-corner corner-tr"></div>
+            <div class="ornate-corner corner-bl"></div>
+            <div class="ornate-corner corner-br"></div>
+
+            <div id="loading" class="loading-state" style="display: none;">
+                <div class="loading-spinner"></div>
+                <p>Loading the chronicles...</p>
+            </div>
+
+            <div id="profiles-grid" class="profiles-grid">
+                <!-- Profiles will be loaded here dynamically -->
+            </div>
+
+            <div id="empty-state" class="empty-state" style="display: none;">
+                <p>📜 The chronicles await their first inscription...</p>
+                <p>Be the first to inscribe a legendary account!</p>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>Keepers of X © 2025 | Preserving Digital History</p>
+        <p>
+            <a href="mailto:hello@keepersofx.com">Contact</a> | 
+            <a href="/about.html">About</a>
+        </p>
+    </footer>
+
+    <script src="/app.js"></script>
+</body>
+</html>

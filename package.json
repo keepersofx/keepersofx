@@ -1,0 +1,24 @@
+{
+  "name": "keepersofx",
+  "version": "1.0.0",
+  "description": "A vintage manuscript-style archive of when people joined X/Twitter",
+  "scripts": {
+    "dev": "wrangler pages dev . --d1 keepersofx-db",
+    "deploy": "wrangler pages deploy .",
+    "db:create": "wrangler d1 create keepersofx-db",
+    "db:migrate": "wrangler d1 execute keepersofx-db --file=./schema.sql",
+    "db:query": "wrangler d1 execute keepersofx-db --command"
+  },
+  "keywords": [
+    "twitter",
+    "x",
+    "archive",
+    "cloudflare"
+  ],
+  "author": "Keepers of X",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/keepersofx/keepersofx.git"
+  }
+}
