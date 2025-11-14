@@ -1,48 +1,48 @@
-// Keepers of X - Cloudflare Worker
-// Backend API for profile scraping and database operations
+// Keepers of X - Cloudflare Pages Function
 
-export default {
-  async fetch(request, env) {
-    const url = new URL(request.url);
-    
-    // CORS headers
-    const corsHeaders = {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
-    };
+export async function onRequest(context) {
+  const { request, env } = context;
+  const url = new URL(request.url);
+  
+  // CORS headers
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+  };
 
-    // Handle CORS preflight
-    if (request.method === 'OPTIONS') {
-      return new Response(null, { headers: corsHeaders });
-    }
-
-    try {
-      // Route requests
-      if (url.pathname === '/api/profiles') {
-        return handleGetProfiles(env, corsHeaders);
-      }
-      
-      if (url.pathname === '/api/stats') {
-        return handleGetStats(env, corsHeaders);
-      }
-      
-      if (url.pathname === '/api/submit' && request.method === 'POST') {
-        return handleSubmit(request, env, corsHeaders);
-      }
-
-      // Return 404 for unknown routes
-      return new Response('Not Found', { status: 404 });
-      
-    } catch (error) {
-      console.error('Worker error:', error);
-      return new Response(JSON.stringify({ error: 'Internal server error' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    }
+  // Handle CORS preflight
+  if (request.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
   }
-};
+
+  try {
+    // Extract the API path
+    const path = url.pathname.replace('/api', '');
+    
+    // Route requests
+    if (path === '/profiles') {
+      return handleGetProfiles(env, corsHeaders);
+    }
+    
+    if (path === '/stats') {
+      return handleGetStats(env, corsHeaders);
+    }
+    
+    if (path === '/submit' && request.method === 'POST') {
+      return handleSubmit(request, env, corsHeaders);
+    }
+
+    return new Response('Not Found', { status: 404 });
+    
+  } catch (error) {
+    console.error('Function error:', error);
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+  }
+}
 
 // Get all profiles
 async function handleGetProfiles(env, corsHeaders) {
@@ -54,13 +54,12 @@ async function handleGetProfiles(env, corsHeaders) {
       LIMIT 1000
     `).all();
 
-    return new Response(JSON.stringify({ profiles: result.results }), {
+    return new Response(JSON.stringify({ profiles: result.results || [] }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
   } catch (error) {
     console.error('Error fetching profiles:', error);
-    return new Response(JSON.stringify({ error: 'Failed to fetch profiles' }), {
-      status: 500,
+    return new Response(JSON.stringify({ profiles: [] }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
   }
@@ -70,7 +69,7 @@ async function handleGetProfiles(env, corsHeaders) {
 async function handleGetStats(env, corsHeaders) {
   try {
     const totalResult = await env.DB.prepare('SELECT COUNT(*) as count FROM profiles').first();
-    const total = totalResult.count;
+    const total = totalResult?.count || 0;
 
     const earliestResult = await env.DB.prepare(`
       SELECT strftime('%Y', join_date) as year 
@@ -79,14 +78,14 @@ async function handleGetStats(env, corsHeaders) {
       ORDER BY join_date ASC 
       LIMIT 1
     `).first();
-    const earliestYear = earliestResult ? earliestResult.year : null;
+    const earliestYear = earliestResult?.year || null;
 
     const countriesResult = await env.DB.prepare(`
       SELECT COUNT(DISTINCT location) as count 
       FROM profiles 
       WHERE location IS NOT NULL AND location != ''
     `).first();
-    const countries = countriesResult.count;
+    const countries = countriesResult?.count || 0;
 
     return new Response(JSON.stringify({
       total,
@@ -176,25 +175,20 @@ async function handleSubmit(request, env, corsHeaders) {
 // Scrape X/Twitter profile data
 async function scrapeXProfile(handle) {
   try {
-    // Fetch the X profile page
     const response = await fetch(`https://x.com/${handle}`, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.5',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
       }
     });
 
     if (!response.ok) {
-      throw new Error('Profile not found or rate limited');
+      throw new Error('Profile not found');
     }
 
     const html = await response.text();
 
-    // Extract data using regex patterns
-    // Note: X's HTML structure may change, these are approximate patterns
-    
-    // Join date - look for "Joined" text
+    // Join date
     let joinDate = null;
     const joinMatch = html.match(/Joined\s+([A-Z][a-z]+)\s+(\d{4})/i);
     if (joinMatch) {
@@ -202,7 +196,7 @@ async function scrapeXProfile(handle) {
       joinDate = `${year}-${getMonthNumber(month)}-01`;
     }
 
-    // Followers count
+    // Followers
     let followers = 0;
     const followersMatch = html.match(/(\d+(?:,\d+)*(?:\.\d+)?)\s*[KMB]?\s*Followers/i);
     if (followersMatch) {
@@ -224,7 +218,7 @@ async function scrapeXProfile(handle) {
     }
 
     if (!joinDate) {
-      throw new Error('Could not extract join date from profile');
+      throw new Error('Could not extract join date');
     }
 
     return {
@@ -240,7 +234,6 @@ async function scrapeXProfile(handle) {
   }
 }
 
-// Helper: Convert month name to number
 function getMonthNumber(monthName) {
   const months = {
     'january': '01', 'february': '02', 'march': '03', 'april': '04',
@@ -250,7 +243,6 @@ function getMonthNumber(monthName) {
   return months[monthName.toLowerCase()] || '01';
 }
 
-// Helper: Parse follower count (handles K, M, B suffixes)
 function parseFollowerCount(str) {
   const cleaned = str.replace(/,/g, '');
   const num = parseFloat(cleaned);
