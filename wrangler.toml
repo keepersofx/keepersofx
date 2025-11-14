@@ -9,7 +9,7 @@ main = "worker.js"
 [[d1_databases]]
 binding = "DB"
 database_name = "keepersofx-db"
-database_id = "database_id = "ce3fae4a-f648-4ed1-9f9f-58a18c543514"
+database_id = "ce3fae4a-f648-4ed1-9f9f-58a18c543514"
 
 # Workers configuration
 [build]
